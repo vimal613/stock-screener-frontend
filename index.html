@@ -1,172 +1,93 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Alpha Screener</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- React -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-
-  <style>
-    body {
-      margin: 0;
-      background: #0b0f0b;
-      color: #d4ffd4;
-      font-family: Arial, sans-serif;
-    }
-
-    .container {
-      max-width: 1100px;
-      margin: auto;
-      padding: 20px;
-    }
-
-    h1 {
-      color: #39ff14;
-    }
-
-    button {
-      background: linear-gradient(90deg, #39ff14, #00ffaa);
-      border: none;
-      padding: 14px 28px;
-      font-size: 16px;
-      cursor: pointer;
-      border-radius: 8px;
-      margin-top: 20px;
-    }
-
-    .note {
-      margin-top: 15px;
-      color: #ffcc00;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 16px;
-      margin-top: 25px;
-    }
-
-    .card {
-      background: #101810;
-      padding: 16px;
-      border-radius: 10px;
-      border: 1px solid #1f3f1f;
-    }
-
-    .symbol {
-      font-size: 22px;
-      color: #39ff14;
-      font-weight: bold;
-    }
-
-    .row {
-      margin-top: 8px;
-      font-size: 14px;
-    }
-
-    .confidence {
-      color: #00ffaa;
-      font-weight: bold;
-    }
-
-    .empty {
-      margin-top: 30px;
-      color: #ff6666;
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>Alpha Screener</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+<style>
+body { font-family: Arial; background: #fff; margin: 20px; }
+button { padding: 10px 20px; font-size: 16px; }
+.card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; }
+.notice { background: #fff3cd; padding: 10px; margin-bottom: 10px; }
+</style>
 </head>
-
 <body>
-  <div id="root"></div>
+<div id="root"></div>
 
-  <script type="text/babel">
-    const { useState } = React;
+<script type="text/babel">
+function App() {
+  const [capital, setCapital] = React.useState(50000);
+  const [universe, setUniverse] = React.useState("NIFTY50");
+  const [loading, setLoading] = React.useState(false);
+  const [data, setData] = React.useState(null);
+  const API = "https://YOUR_BACKEND_URL/api";
 
-    function StockScreener() {
-      const [loading, setLoading] = useState(false);
-      const [results, setResults] = useState({
-        marketStatus: null,
-        note: "",
-        topPicks: []
+  const scan = async () => {
+    setLoading(true);
+    setData(null);
+    try {
+      const res = await fetch(API + "/scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ capital, universe })
       });
-
-      const scanMarket = async () => {
-        setLoading(true);
-
-        try {
-          const res = await fetch(
-            "https://stock-screener-api-kzjj.onrender.com/api/scan",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({})
-            }
-          );
-
-          const data = await res.json();
-
-          setResults({
-            marketStatus: data.marketStatus || null,
-            note: data.note || data.reason || "",
-            topPicks: Array.isArray(data.topPicks) ? data.topPicks : []
-          });
-
-        } catch (err) {
-          setResults({
-            marketStatus: "ERROR",
-            note: "Backend unreachable",
-            topPicks: []
-          });
-        }
-
-        setLoading(false);
-      };
-
-      return (
-        <div className="container">
-          <h1>ALPHA SCREENER</h1>
-          <p>5-Day Indian Market Strategy (NIFTY-50)</p>
-
-          <button onClick={scanMarket} disabled={loading}>
-            {loading ? "Scanning..." : "SCAN MARKET"}
-          </button>
-
-          {results.note && <div className="note">{results.note}</div>}
-
-          {results.marketStatus === "TRADE" && results.topPicks.length > 0 && (
-            <div className="grid">
-              {results.topPicks.map((stock, idx) => (
-                <div className="card" key={idx}>
-                  <div className="symbol">{stock.symbol}</div>
-                  <div className="row">
-                    Confidence: <span className="confidence">{stock.confidence}</span>
-                  </div>
-                  <div className="row">Entry: {stock.entry}</div>
-                  <div className="row">Hold Days: {stock.holdDays}</div>
-                  <div className="row">Stop Loss: {stock.stopLossPercent}%</div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {results.marketStatus === "TRADE" && results.topPicks.length === 0 && (
-            <div className="empty">
-              No high-probability trades today. Capital preservation day.
-            </div>
-          )}
-
-          {results.marketStatus === "NO_TRADE_TODAY" && (
-            <div className="empty">{results.note}</div>
-          )}
-        </div>
-      );
+      const json = await res.json();
+      setData(json);
+    } catch {
+      alert("Backend not reachable");
     }
+    setLoading(false);
+  };
 
-    ReactDOM.createRoot(document.getElementById("root")).render(<StockScreener />);
-  </script>
+  return (
+    <div>
+      <h2>⚡ Alpha Screener</h2>
+
+      <div className="notice">
+        Best time to scan: <b>10:45 AM – 1:30 PM IST</b><br/>
+        You may scan anytime, but results may vary.
+      </div>
+
+      <div>
+        Capital ₹:
+        <input value={capital} onChange={e => setCapital(e.target.value)} />
+      </div>
+
+      <div>
+        Universe:
+        <select onChange={e => setUniverse(e.target.value)}>
+          <option value="NIFTY50">NIFTY-50</option>
+          <option value="MIDCAP">MIDCAP</option>
+        </select>
+      </div>
+
+      <br/>
+      <button onClick={scan}>🚀 Scan Market</button>
+
+      {loading && <p>Scanning… please wait</p>}
+
+      {data && data.status === "NO_TRADE" && (
+        <p>No valid setups today. This is OK.</p>
+      )}
+
+      {data && data.results && data.results.map((s, i) => (
+        <div className="card" key={i}>
+          <b>{s.symbol}</b><br/>
+          Price: ₹{s.price}<br/>
+          Target: ₹{s.target}<br/>
+          Stop: ₹{s.stop}<br/>
+          Qty: {s.quantity}<br/>
+          Max Profit: ₹{s.maxProfit}<br/>
+          Max Loss: ₹{s.maxLoss}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
 </body>
 </html>
