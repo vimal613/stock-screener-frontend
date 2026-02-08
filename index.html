@@ -1,747 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alpha AI Stock Screener - Find Best Stocks to Buy</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --neon-green: #39ff14;
-            --neon-blue: #00e5ff;
-            --neon-purple: #bc13fe;
-            --dark-bg: #050505;
-            --card-bg: #0d0d0d;
-            --border: #1a1a1a;
-            --text-main: #ffffff;
-            --text-dim: #666666;
-            --success: #00ff00;
-            --danger: #ff0055;
-            --warning: #ffaa00;
-        }
+  <meta charset="UTF-8" />
+  <title>Alpha Screener</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <!-- React -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 
-        body {
-            font-family: 'Sora', sans-serif;
-            background: var(--dark-bg);
-            color: var(--text-main);
-            overflow-x: hidden;
-        }
+  <style>
+    body {
+      margin: 0;
+      background: #0b0f0b;
+      color: #d4ffd4;
+      font-family: Arial, sans-serif;
+    }
 
-        /* Animated Grid Background */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(57, 255, 20, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(57, 255, 20, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            z-index: -1;
-            animation: gridMove 20s linear infinite;
-        }
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      padding: 20px;
+    }
 
-        @keyframes gridMove {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
-        }
+    h1 {
+      color: #39ff14;
+    }
 
-        body::after {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(57, 255, 20, 0.05) 0%, transparent 70%);
-            animation: rotate 30s linear infinite;
-            z-index: -1;
-        }
+    button {
+      background: linear-gradient(90deg, #39ff14, #00ffaa);
+      border: none;
+      padding: 14px 28px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
 
-        @keyframes rotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+    .note {
+      margin-top: 15px;
+      color: #ffcc00;
+    }
 
-        /* Header */
-        .header {
-            padding: 2rem 3rem;
-            border-bottom: 2px solid var(--border);
-            background: rgba(5, 5, 5, 0.95);
-            backdrop-filter: blur(20px);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      margin-top: 25px;
+    }
 
-        .logo {
-            font-family: 'Archivo Black', sans-serif;
-            font-size: 2.8rem;
-            background: linear-gradient(90deg, var(--neon-green), var(--neon-blue));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-transform: uppercase;
-            letter-spacing: -2px;
-            text-shadow: 0 0 30px rgba(57, 255, 20, 0.5);
-        }
+    .card {
+      background: #101810;
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid #1f3f1f;
+    }
 
-        .tagline {
-            font-family: 'Space Mono', monospace;
-            font-size: 0.85rem;
-            color: var(--text-dim);
-            margin-top: 0.3rem;
-            letter-spacing: 2px;
-        }
+    .symbol {
+      font-size: 22px;
+      color: #39ff14;
+      font-weight: bold;
+    }
 
-        /* Container */
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-        }
+    .row {
+      margin-top: 8px;
+      font-size: 14px;
+    }
 
-        /* Filter Section */
-        .filter-section {
-            background: var(--card-bg);
-            border: 2px solid var(--border);
-            border-radius: 16px;
-            padding: 2.5rem;
-            margin-bottom: 3rem;
-            box-shadow: 0 0 40px rgba(57, 255, 20, 0.1);
-        }
+    .confidence {
+      color: #00ffaa;
+      font-weight: bold;
+    }
 
-        .section-title {
-            font-family: 'Archivo Black', sans-serif;
-            font-size: 1.8rem;
-            color: var(--neon-green);
-            margin-bottom: 2rem;
-            text-transform: uppercase;
-            letter-spacing: -1px;
-        }
-
-        .filters-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-        }
-
-        .filter-label {
-            font-size: 0.85rem;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-family: 'Space Mono', monospace;
-        }
-
-        .filter-input, .filter-select {
-            padding: 1rem;
-            background: var(--dark-bg);
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            color: var(--text-main);
-            font-size: 1rem;
-            font-family: 'Space Mono', monospace;
-            transition: all 0.3s ease;
-        }
-
-        .filter-input:focus, .filter-select:focus {
-            outline: none;
-            border-color: var(--neon-green);
-            box-shadow: 0 0 15px rgba(57, 255, 20, 0.2);
-        }
-
-        .btn-scan {
-            padding: 1.5rem 4rem;
-            background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
-            border: none;
-            border-radius: 8px;
-            color: var(--dark-bg);
-            font-size: 1.2rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 0 30px rgba(57, 255, 20, 0.3);
-            font-family: 'Archivo Black', sans-serif;
-        }
-
-        .btn-scan:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 0 50px rgba(57, 255, 20, 0.6);
-        }
-
-        .btn-scan:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Loading */
-        .loading-container {
-            text-align: center;
-            padding: 4rem;
-        }
-
-        .scanner-animation {
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 2rem;
-            position: relative;
-        }
-
-        .scan-ring {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border: 4px solid transparent;
-            border-top-color: var(--neon-green);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        .scan-ring:nth-child(2) {
-            animation-duration: 1.5s;
-            border-top-color: var(--neon-blue);
-            transform: scale(0.8);
-        }
-
-        .scan-ring:nth-child(3) {
-            animation-duration: 2s;
-            border-top-color: var(--neon-purple);
-            transform: scale(0.6);
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            font-family: 'Space Mono', monospace;
-            font-size: 1.1rem;
-            color: var(--neon-green);
-            margin-bottom: 0.5rem;
-        }
-
-        .loading-subtext {
-            color: var(--text-dim);
-            font-size: 0.9rem;
-        }
-
-        /* Results Section */
-        .results-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .results-count {
-            font-family: 'Space Mono', monospace;
-            font-size: 1rem;
-            color: var(--text-dim);
-        }
-
-        .results-count span {
-            color: var(--neon-green);
-            font-weight: 700;
-            font-size: 1.3rem;
-        }
-
-        /* Stock Cards */
-        .stocks-grid {
-            display: grid;
-            gap: 1.5rem;
-        }
-
-        .stock-card {
-            background: var(--card-bg);
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            padding: 2rem;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stock-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: var(--neon-green);
-            transform: scaleY(0);
-            transition: transform 0.3s ease;
-        }
-
-        .stock-card:hover {
-            border-color: var(--neon-green);
-            box-shadow: 0 10px 40px rgba(57, 255, 20, 0.2);
-            transform: translateX(5px);
-        }
-
-        .stock-card:hover::before {
-            transform: scaleY(1);
-        }
-
-        .stock-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .stock-symbol {
-            font-family: 'Archivo Black', sans-serif;
-            font-size: 2rem;
-            color: var(--neon-green);
-            letter-spacing: -1px;
-        }
-
-        .stock-name {
-            font-size: 0.95rem;
-            color: var(--text-dim);
-            margin-top: 0.3rem;
-        }
-
-        .score-badge {
-            padding: 0.6rem 1.2rem;
-            border-radius: 50px;
-            font-family: 'Space Mono', monospace;
-            font-weight: 700;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-        }
-
-        .score-badge.excellent {
-            background: rgba(0, 255, 0, 0.15);
-            color: var(--success);
-            border: 2px solid var(--success);
-        }
-
-        .score-badge.good {
-            background: rgba(57, 255, 20, 0.15);
-            color: var(--neon-green);
-            border: 2px solid var(--neon-green);
-        }
-
-        .score-badge.moderate {
-            background: rgba(255, 170, 0, 0.15);
-            color: var(--warning);
-            border: 2px solid var(--warning);
-        }
-
-        /* Trading Plan */
-        .trading-plan {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 1.5rem;
-            background: var(--dark-bg);
-            padding: 1.5rem;
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-        }
-
-        .plan-item {
-            text-align: center;
-        }
-
-        .plan-label {
-            font-size: 0.75rem;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 0.5rem;
-            font-family: 'Space Mono', monospace;
-        }
-
-        .plan-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            font-family: 'Space Mono', monospace;
-        }
-
-        .plan-value.buy { color: var(--neon-green); }
-        .plan-value.target { color: var(--neon-blue); }
-        .plan-value.stop { color: var(--danger); }
-
-        .plan-date {
-            font-size: 0.85rem;
-            color: var(--text-dim);
-            margin-top: 0.3rem;
-        }
-
-        /* Metrics */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 1rem;
-        }
-
-        .metric-item {
-            background: var(--dark-bg);
-            padding: 1rem;
-            border-radius: 6px;
-            border-left: 3px solid var(--neon-green);
-        }
-
-        .metric-label {
-            font-size: 0.7rem;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.4rem;
-        }
-
-        .metric-value {
-            font-family: 'Space Mono', monospace;
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
-
-        /* Error */
-        .error-container {
-            background: rgba(255, 0, 85, 0.1);
-            border: 2px solid var(--danger);
-            border-radius: 12px;
-            padding: 2rem;
-            text-align: center;
-            color: var(--danger);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .header {
-                padding: 1.5rem 1.5rem;
-            }
-
-            .logo {
-                font-size: 2rem;
-            }
-
-            .filters-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .btn-scan {
-                width: 100%;
-            }
-
-            .trading-plan {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: var(--text-dim);
-        }
-
-        .empty-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            opacity: 0.3;
-        }
-
-        .empty-text {
-            font-size: 1.2rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .empty-subtext {
-            font-size: 0.9rem;
-        }
-    </style>
+    .empty {
+      margin-top: 30px;
+      color: #ff6666;
+    }
+  </style>
 </head>
+
 <body>
-    <div id="root"></div>
+  <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState } = React;
+  <script type="text/babel">
+    const { useState } = React;
 
-        // REPLACE WITH YOUR BACKEND URL
-        const API_URL = 'https://stock-screener-api-kzjj.onrender.com/api';
+    function StockScreener() {
+      const [loading, setLoading] = useState(false);
+      const [results, setResults] = useState({
+        marketStatus: null,
+        note: "",
+        topPicks: []
+      });
 
-        function StockScreener() {
-            const [filters, setFilters] = useState({
-                minPrice: '',
-                maxPrice: '',
-                minVolume: '',
-                minMarketCap: '',
-                maxMarketCap: '',
-                sector: 'all'
-            });
+      const scanMarket = async () => {
+        setLoading(true);
 
-            const [loading, setLoading] = useState(false);
-            const [results, setResults] = useState(null);
-            const [error, setError] = useState(null);
+        try {
+          const res = await fetch(
+            "https://stock-screener-api-kzjj.onrender.com/api/scan",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({})
+            }
+          );
 
-            const handleFilterChange = (field, value) => {
-                setFilters(prev => ({ ...prev, [field]: value }));
-            };
+          const data = await res.json();
 
-            const handleScan = async () => {
-                setLoading(true);
-                setError(null);
-                setResults(null);
+          setResults({
+            marketStatus: data.marketStatus || null,
+            note: data.note || data.reason || "",
+            topPicks: Array.isArray(data.topPicks) ? data.topPicks : []
+          });
 
-                try {
-                    const response = await fetch(`${API_URL}/scan`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(filters)
-                    });
-
-                    if (!response.ok) throw new Error('Scan failed');
-                    
-                    const data = await response.json();
-                    setResults(data);
-                } catch (err) {
-                    setError(err.message);
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            const getScoreBadge = (score) => {
-                if (score >= 80) return { class: 'excellent', text: 'Excellent' };
-                if (score >= 65) return { class: 'good', text: 'Good' };
-                return { class: 'moderate', text: 'Moderate' };
-            };
-
-            return (
-                <>
-                    <div className="header">
-                        <h1 className="logo">ALPHA SCREENER</h1>
-                        <p className="tagline">AI-POWERED STOCK DISCOVERY ENGINE</p>
-                    </div>
-
-                    <div className="container">
-                        <div className="filter-section">
-                            <h2 className="section-title">⚡ Set Your Criteria</h2>
-                            
-                            <div className="filters-grid">
-                                <div className="filter-group">
-                                    <label className="filter-label">Min Price ($)</label>
-                                    <input 
-                                        type="number" 
-                                        className="filter-input"
-                                        placeholder="e.g., 10"
-                                        value={filters.minPrice}
-                                        onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                                    />
-                                </div>
-
-                                <div className="filter-group">
-                                    <label className="filter-label">Max Price ($)</label>
-                                    <input 
-                                        type="number" 
-                                        className="filter-input"
-                                        placeholder="e.g., 500"
-                                        value={filters.maxPrice}
-                                        onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                                    />
-                                </div>
-
-                                <div className="filter-group">
-                                    <label className="filter-label">Min Volume (M)</label>
-                                    <input 
-                                        type="number" 
-                                        className="filter-input"
-                                        placeholder="e.g., 1"
-                                        value={filters.minVolume}
-                                        onChange={(e) => handleFilterChange('minVolume', e.target.value)}
-                                    />
-                                </div>
-
-                                <div className="filter-group">
-                                    <label className="filter-label">Min Market Cap (B)</label>
-                                    <input 
-                                        type="number" 
-                                        className="filter-input"
-                                        placeholder="e.g., 1"
-                                        value={filters.minMarketCap}
-                                        onChange={(e) => handleFilterChange('minMarketCap', e.target.value)}
-                                    />
-                                </div>
-
-                                <div className="filter-group">
-                                    <label className="filter-label">Max Market Cap (B)</label>
-                                    <input 
-                                        type="number" 
-                                        className="filter-input"
-                                        placeholder="e.g., 100"
-                                        value={filters.maxMarketCap}
-                                        onChange={(e) => handleFilterChange('maxMarketCap', e.target.value)}
-                                    />
-                                </div>
-
-                                <div className="filter-group">
-                                    <label className="filter-label">Sector</label>
-                                    <select 
-                                        className="filter-select"
-                                        value={filters.sector}
-                                        onChange={(e) => handleFilterChange('sector', e.target.value)}
-                                    >
-                                        <option value="all">All Sectors</option>
-                                        <option value="technology">Technology</option>
-                                        <option value="healthcare">Healthcare</option>
-                                        <option value="financial">Financial</option>
-                                        <option value="consumer">Consumer</option>
-                                        <option value="industrial">Industrial</option>
-                                        <option value="energy">Energy</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <button 
-                                className="btn-scan"
-                                onClick={handleScan}
-                                disabled={loading}
-                            >
-                                {loading ? 'Scanning...' : '🚀 Scan Market'}
-                            </button>
-                        </div>
-
-                        {loading && (
-                            <div className="loading-container">
-                                <div className="scanner-animation">
-                                    <div className="scan-ring"></div>
-                                    <div className="scan-ring"></div>
-                                    <div className="scan-ring"></div>
-                                </div>
-                                <div className="loading-text">Scanning 500+ Stocks...</div>
-                                <div className="loading-subtext">Analyzing trends, calculating targets & stop-losses</div>
-                            </div>
-                        )}
-
-                        {error && (
-                            <div className="error-container">
-                                <h3>⚠️ Error</h3>
-                                <p>{error}</p>
-                            </div>
-                        )}
-
-                        {results && (
-                            <>
-                                <div className="results-header">
-                                    <div className="results-count">
-                                        Found <span>{results.stocks.length}</span> top opportunities
-                                    </div>
-                                </div>
-
-                                <div className="stocks-grid">
-                                    {results.stocks.map((stock, idx) => {
-                                        const badge = getScoreBadge(stock.score);
-                                        return (
-                                            <div key={idx} className="stock-card">
-                                                <div className="stock-header">
-                                                    <div>
-                                                        <div className="stock-symbol">{stock.symbol}</div>
-                                                        <div className="stock-name">{stock.name}</div>
-                                                    </div>
-                                                    <div className={`score-badge ${badge.class}`}>
-                                                        {badge.text} • {stock.score}
-                                                    </div>
-                                                </div>
-
-                                                <div className="trading-plan">
-                                                    <div className="plan-item">
-                                                        <div className="plan-label">Entry Price</div>
-                                                        <div className="plan-value buy">${stock.entryPrice}</div>
-                                                        <div className="plan-date">Buy Now</div>
-                                                    </div>
-                                                    <div className="plan-item">
-                                                        <div className="plan-label">Target Price</div>
-                                                        <div className="plan-value target">${stock.targetPrice}</div>
-                                                        <div className="plan-date">{stock.targetDate}</div>
-                                                    </div>
-                                                    <div className="plan-item">
-                                                        <div className="plan-label">Stop Loss</div>
-                                                        <div className="plan-value stop">${stock.stopLoss}</div>
-                                                        <div className="plan-date">Exit if hit</div>
-                                                    </div>
-                                                    <div className="plan-item">
-                                                        <div className="plan-label">Potential Gain</div>
-                                                        <div className="plan-value buy">
-                                                            {((stock.targetPrice - stock.entryPrice) / stock.entryPrice * 100).toFixed(1)}%
-                                                        </div>
-                                                        <div className="plan-date">Expected</div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="metrics-grid">
-                                                    <div className="metric-item">
-                                                        <div className="metric-label">Volume</div>
-                                                        <div className="metric-value">{stock.volume}</div>
-                                                    </div>
-                                                    <div className="metric-item">
-                                                        <div className="metric-label">Market Cap</div>
-                                                        <div className="metric-value">{stock.marketCap}</div>
-                                                    </div>
-                                                    <div className="metric-item">
-                                                        <div className="metric-label">RSI</div>
-                                                        <div className="metric-value">{stock.rsi}</div>
-                                                    </div>
-                                                    <div className="metric-item">
-                                                        <div className="metric-label">Trend</div>
-                                                        <div className="metric-value">{stock.trend}</div>
-                                                    </div>
-                                                    <div className="metric-item">
-                                                        <div className="metric-label">P/E Ratio</div>
-                                                        <div className="metric-value">{stock.peRatio}</div>
-                                                    </div>
-                                                    <div className="metric-item">
-                                                        <div className="metric-label">Momentum</div>
-                                                        <div className="metric-value">{stock.momentum}%</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </>
-                        )}
-
-                        {!loading && !results && !error && (
-                            <div className="empty-state">
-                                <div className="empty-icon">🎯</div>
-                                <div className="empty-text">Set your filters and scan the market</div>
-                                <div className="empty-subtext">AI will find the best stocks matching your criteria</div>
-                            </div>
-                        )}
-                    </div>
-                </>
-            );
+        } catch (err) {
+          setResults({
+            marketStatus: "ERROR",
+            note: "Backend unreachable",
+            topPicks: []
+          });
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<StockScreener />);
-    </script>
+        setLoading(false);
+      };
+
+      return (
+        <div className="container">
+          <h1>ALPHA SCREENER</h1>
+          <p>5-Day Indian Market Strategy (NIFTY-50)</p>
+
+          <button onClick={scanMarket} disabled={loading}>
+            {loading ? "Scanning..." : "SCAN MARKET"}
+          </button>
+
+          {results.note && <div className="note">{results.note}</div>}
+
+          {results.marketStatus === "TRADE" && results.topPicks.length > 0 && (
+            <div className="grid">
+              {results.topPicks.map((stock, idx) => (
+                <div className="card" key={idx}>
+                  <div className="symbol">{stock.symbol}</div>
+                  <div className="row">
+                    Confidence: <span className="confidence">{stock.confidence}</span>
+                  </div>
+                  <div className="row">Entry: {stock.entry}</div>
+                  <div className="row">Hold Days: {stock.holdDays}</div>
+                  <div className="row">Stop Loss: {stock.stopLossPercent}%</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {results.marketStatus === "TRADE" && results.topPicks.length === 0 && (
+            <div className="empty">
+              No high-probability trades today. Capital preservation day.
+            </div>
+          )}
+
+          {results.marketStatus === "NO_TRADE_TODAY" && (
+            <div className="empty">{results.note}</div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<StockScreener />);
+  </script>
 </body>
 </html>
